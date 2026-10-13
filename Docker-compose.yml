@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  database:
+    build: ./db
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+      build: ./web
+      # container_name: web_app  
+    #  ports:
+     #   - "5000:5000"
+      environment:
+        - DB_HOST=database
+        - DB_NAME=appdb
+        - DB_USER=postgres
+        - DB_PASSWORD=password
+      depends_on:
+        database:
+          condition: service_healthy
+      networks:
+        - app-network
+volumes:
+  pgdata:
+
+networks:
+  app-network:
+    driver: bridge
